@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Calculadora de Nota Final</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=League+Spartan&family=Montserrat+Classic&display=swap');
+
+  body {
+    margin: 0;
+    background-color: #114087;
+    color: white;
+    font-family: 'Montserrat Classic', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 2rem;
+  }
+
+  h1 {
+    font-family: 'League Spartan', sans-serif;
+    font-weight: 700;
+    font-size: 3rem;
+    color: #FFBD59;
+    margin-bottom: 1rem;
+  }
+
+  .container {
+    background-color: #0d316b;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 0 15px #FFBD59;
+    max-width: 400px;
+    width: 100%;
+  }
+
+  label {
+    display: block;
+    margin-top: 1rem;
+    font-size: 1.1rem;
+    color: #FFBD59;
+  }
+
+  input[type="number"] {
+    width: 100%;
+    padding: 0.6rem;
+    font-size: 1.1rem;
+    border-radius: 5px;
+    border: none;
+    margin-top: 0.3rem;
+    font-family: 'Montserrat Classic', sans-serif;
+    box-sizing: border-box;
+  }
+
+  button {
+    margin-top: 1.5rem;
+    width: 100%;
+    background-color: #FFBD59;
+    color: #114087;
+    font-weight: 700;
+    font-size: 1.2rem;
+    border: none;
+    padding: 0.75rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  button:hover {
+    background-color: #e0a835;
+  }
+
+  .result {
+    margin-top: 1.5rem;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #FFBD59;
+    min-height: 2rem;
+  }
+</style>
+</head>
+<body>
+  <h1>Calculadora de Nota Final</h1>
+  <div class="container">
+    <label for="parcial1">Nota Parcial 1 (0 - 20):</label>
+    <input type="number" id="parcial1" min="0" max="20" step="0.01" />
+
+    <label for="parcial2">Nota Parcial 2 (0 - 20):</label>
+    <input type="number" id="parcial2" min="0" max="20" step="0.01" />
+
+    <button id="calcularBtn">Calcular Nota Necesaria en Final</button>
+
+    <div class="result" id="resultado"></div>
+  </div>
+
+  <script>
+    // Tabla de notas según imagen: notaPrevia en filas y notaExamen en columnas, devuelve notaDefinitiva
+    // La tabla base (sin promediar) para notaPrevia va de 10 a 20, notaExamen igual, notaDefinitiva también
+
+    // Usamos la tabla para buscar nota definitiva dada nota previa y nota final
+    // Pero queremos al revés: Dada nota previa, decime la nota mínima en final para que definitiva >= 11
+
+    // Los valores en la tabla en la imagen están entre 5 y 20:
+    // Indices fila = nota previa -10 (por ejemplo, para nota previa=10: índice 0)
+    // Indices col = nota examen -10
+
+    // NOTA: Como la nota previa puede no ser entera (promedio), hacemos floor para fila y col.
+
+    const tabla = [
+      [5,5,5,7,8,8,10,11,11,15,15],
+      [5,6,6,8,8,9,10,11,12,15,16],
+      [6,6,7,8,9,9,11,11,12,15,16],
+      [6,7,7,9,9,10,11,12,12,15,16],
+      [7,7,8,9,10,10,12,12,13,16,16],
+      [8,8,8,10,10,11,12,13,13,16,17],
+      [8,9,9,10,11,11,12,13,14,16,17],
+      [9,9,10,11,11,12,13,13,14,16,17],
+      [9,10,10,11,12,12,13,14,14,17,17],
+      [10,10,11,12,12,13,14,14,15,17,18],
+      [11,11,11,12,13,13,14,15,15,17,18],
+      [11,12,12,13,13,14,14,15,16,17,18],
+      [12,12,13,13,14,14,15,15,16,18,19],
+      [12,13,13,14,14,15,15,16,16,18,19],
+      [13,13,14,14,15,15,16,16,17,18,19],
+      [14,14,14,15,15,16,16,17,17,18,19],
+      [14,15,15,15,16,16,16,17,18,19,20],
+      [15,15,16,16,16,17,17,17,18,19,20],
+      [15,16,16,16,17,17,17,18,18,19,20],
+      [16,16,17,17,17,18,18,18,19,19,20]
+    ];
+
+    function notaAIndice(nota) {
+      let i = Math.floor(nota) - 10;
+      if(i < 0) i = 0;
+      if(i > 10) i = 10;
+      return i;
+    }
+
+    function notaPreviaAIndice(nota) {
+      let i = Math.floor(nota) - 10;
+      if(i < 0) i = 0;
+      if(i > 19) i = 19;
+      return i;
+    }
+
+    document.getElementById('calcularBtn').addEventListener('click', () => {
+      const p1 = parseFloat(document.getElementById('parcial1').value);
+      const p2 = parseFloat(document.getElementById('parcial2').value);
+      const resultado = document.getElementById('resultado');
+
+      if(isNaN(p1) || isNaN(p2) || p1 < 0 || p1 > 20 || p2 < 0 || p2 > 20) {
+        resultado.textContent = 'Por favor ingresa notas válidas entre 0 y 20.';
+        return;
+      }
+
+      // Calcular nota previa (promedio parciales)
+      const notaPrevia = (p1 + p2) / 2;
+
+      // Buscamos la nota minima en final para que definitiva >= 11 (pasa la materia)
+      // Nota Final entre 10 y 20 (valores discretos de la tabla)
+      // Vamos a probar del 10 al 20 para ver la primera nota que pasa la definitiva >= 11
+
+      let notaFinalNecesaria = null;
+      const fila = notaPreviaAIndice(notaPrevia);
+
+      for(let nf = 10; nf <= 20; nf++) {
+        let col = notaAIndice(nf);
+        let notaDefinitiva = tabla[fila][col];
+        if(notaDefinitiva >= 11) {
+          notaFinalNecesaria = nf;
+          break;
+        }
+      }
+
+      if(notaFinalNecesaria === null) {
+        resultado.textContent = 'No es posible aprobar con las notas de parciales ingresadas.';
+      } else {
+        // Mostrar la info con dos decimales para nota previa
+        resultado.innerHTML = `
+          Nota Previa (promedio parciales): <strong>${notaPrevia.toFixed(2)}</strong><br/>
+          Necesitas al menos un <strong>${notaFinalNecesaria}</strong> en el examen final para aprobar.
+        `;
+      }
+    });
+  </script>
+</body>
+</html>
