@@ -1,189 +1,285 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Calculadora de Nota Final</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=League+Spartan&family=Montserrat+Classic&display=swap');
-
-  body {
-    margin: 0;
-    background-color: #114087;
-    color: white;
-    font-family: 'Montserrat Classic', sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: 100vh;
-    padding: 2rem;
-  }
-
-  h1 {
-    font-family: 'League Spartan', sans-serif;
-    font-weight: 700;
-    font-size: 3rem;
-    color: #FFBD59;
-    margin-bottom: 1rem;
-  }
-
-  .container {
-    background-color: #0d316b;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 0 15px #FFBD59;
-    max-width: 400px;
-    width: 100%;
-  }
-
-  label {
-    display: block;
-    margin-top: 1rem;
-    font-size: 1.1rem;
-    color: #FFBD59;
-  }
-
-  input[type="number"] {
-    width: 100%;
-    padding: 0.6rem;
-    font-size: 1.1rem;
-    border-radius: 5px;
-    border: none;
-    margin-top: 0.3rem;
-    font-family: 'Montserrat Classic', sans-serif;
-    box-sizing: border-box;
-  }
-
-  button {
-    margin-top: 1.5rem;
-    width: 100%;
-    background-color: #FFBD59;
-    color: #114087;
-    font-weight: 700;
-    font-size: 1.2rem;
-    border: none;
-    padding: 0.75rem;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-
-  button:hover {
-    background-color: #e0a835;
-  }
-
-  .result {
-    margin-top: 1.5rem;
-    font-size: 1.3rem;
-    font-weight: 600;
-    color: #FFBD59;
-    min-height: 2rem;
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Notas Estudiantil</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Calculadora de Nota Final</h1>
-  <div class="container">
-    <label for="parcial1">Nota Parcial 1 (0 - 20):</label>
-    <input type="number" id="parcial1" min="0" max="20" step="0.01" />
+    <div class="container">
+        <h1>Calculadora de Notas</h1>
+        <div class="input-section">
+            <label for="primerParcial">Nota del Primer Parcial (0-20):</label>
+            <input type="number" id="primerParcial" min="0" max="20" placeholder="Ej: 15">
 
-    <label for="parcial2">Nota Parcial 2 (0 - 20):</label>
-    <input type="number" id="parcial2" min="0" max="20" step="0.01" />
+            <label for="segundoParcial">Nota del Segundo Parcial (0-20):</label>
+            <input type="number" id="segundoParcial" min="0" max="20" placeholder="Ej: 12">
 
-    <button id="calcularBtn">Calcular Nota Necesaria en Final</button>
+            <button id="calcularBtn">Calcular</button>
+        </div>
 
-    <div class="result" id="resultado"></div>
-  </div>
+        <div class="results-section">
+            <h2>¡Tus Resultados!</h2>
+            <p><strong>Nota Previa:</strong> <span id="notaPreviaResult">--</span></p>
+            <p><strong>Nota Necesaria en Examen Final:</strong> <span id="notaFinalNeededResult">--</span></p>
+        </div>
 
-  <script>
-    // Tabla de notas según imagen: notaPrevia en filas y notaExamen en columnas, devuelve notaDefinitiva
-    // La tabla base (sin promediar) para notaPrevia va de 10 a 20, notaExamen igual, notaDefinitiva también
-
-    // Usamos la tabla para buscar nota definitiva dada nota previa y nota final
-    // Pero queremos al revés: Dada nota previa, decime la nota mínima en final para que definitiva >= 11
-
-    // Los valores en la tabla en la imagen están entre 5 y 20:
-    // Indices fila = nota previa -10 (por ejemplo, para nota previa=10: índice 0)
-    // Indices col = nota examen -10
-
-    // NOTA: Como la nota previa puede no ser entera (promedio), hacemos floor para fila y col.
-
-    const tabla = [
-      [5,5,5,7,8,8,10,11,11,15,15],
-      [5,6,6,8,8,9,10,11,12,15,16],
-      [6,6,7,8,9,9,11,11,12,15,16],
-      [6,7,7,9,9,10,11,12,12,15,16],
-      [7,7,8,9,10,10,12,12,13,16,16],
-      [8,8,8,10,10,11,12,13,13,16,17],
-      [8,9,9,10,11,11,12,13,14,16,17],
-      [9,9,10,11,11,12,13,13,14,16,17],
-      [9,10,10,11,12,12,13,14,14,17,17],
-      [10,10,11,12,12,13,14,14,15,17,18],
-      [11,11,11,12,13,13,14,15,15,17,18],
-      [11,12,12,13,13,14,14,15,16,17,18],
-      [12,12,13,13,14,14,15,15,16,18,19],
-      [12,13,13,14,14,15,15,16,16,18,19],
-      [13,13,14,14,15,15,16,16,17,18,19],
-      [14,14,14,15,15,16,16,17,17,18,19],
-      [14,15,15,15,16,16,16,17,18,19,20],
-      [15,15,16,16,16,17,17,17,18,19,20],
-      [15,16,16,16,17,17,17,18,18,19,20],
-      [16,16,17,17,17,18,18,18,19,19,20]
-    ];
-
-    function notaAIndice(nota) {
-      let i = Math.floor(nota) - 10;
-      if(i < 0) i = 0;
-      if(i > 10) i = 10;
-      return i;
-    }
-
-    function notaPreviaAIndice(nota) {
-      let i = Math.floor(nota) - 10;
-      if(i < 0) i = 0;
-      if(i > 19) i = 19;
-      return i;
-    }
-
-    document.getElementById('calcularBtn').addEventListener('click', () => {
-      const p1 = parseFloat(document.getElementById('parcial1').value);
-      const p2 = parseFloat(document.getElementById('parcial2').value);
-      const resultado = document.getElementById('resultado');
-
-      if(isNaN(p1) || isNaN(p2) || p1 < 0 || p1 > 20 || p2 < 0 || p2 > 20) {
-        resultado.textContent = 'Por favor ingresa notas válidas entre 0 y 20.';
-        return;
-      }
-
-      // Calcular nota previa (promedio parciales)
-      const notaPrevia = (p1 + p2) / 2;
-
-      // Buscamos la nota minima en final para que definitiva >= 11 (pasa la materia)
-      // Nota Final entre 10 y 20 (valores discretos de la tabla)
-      // Vamos a probar del 10 al 20 para ver la primera nota que pasa la definitiva >= 11
-
-      let notaFinalNecesaria = null;
-      const fila = notaPreviaAIndice(notaPrevia);
-
-      for(let nf = 10; nf <= 20; nf++) {
-        let col = notaAIndice(nf);
-        let notaDefinitiva = tabla[fila][col];
-        if(notaDefinitiva >= 11) {
-          notaFinalNecesaria = nf;
-          break;
-        }
-      }
-
-      if(notaFinalNecesaria === null) {
-        resultado.textContent = 'No es posible aprobar con las notas de parciales ingresadas.';
-      } else {
-        // Mostrar la info con dos decimales para nota previa
-        resultado.innerHTML = `
-          Nota Previa (promedio parciales): <strong>${notaPrevia.toFixed(2)}</strong><br/>
-          Necesitas al menos un <strong>${notaFinalNecesaria}</strong> en el examen final para aprobar.
-        `;
-      }
-    });
-  </script>
+        <div class="explanation-section">
+            <h2>Info Importante</h2>
+            <p><strong>¿Cómo se calcula tu Nota Previa?</strong></p>
+            <p>Se saca el promedio de tus notas del primer y segundo parcial. ¡Ojo! Si el resultado te da con .5 (por ejemplo, 12.5), se redondea para arriba (quedaría en 13).</p>
+            <p><strong>¿Cómo usas la Tabla de Notas?</strong></p>
+            <p>Las "Notas Previas" están arriba (horizontal). Las "Notas del Examen Final" están a la izquierda (vertical). Donde se cruzan, ¡esa es tu "Nota Definitiva"!</p>
+            <p><strong>Reglas para Aprobar:</strong></p>
+            <ul>
+                <li>Si tu "Nota Definitiva" es <strong>10 o más</strong>, ¡felicitaciones, la materia está aprobada!</li>
+                <li>Si tu "Nota Previa" es <strong>16 o más</strong>, ¡ya la tienes! La materia está aprobada, sin necesidad de presentar el examen final.</li>
+            </ul>
+        </div>
+    </div>
+    <script src="script.js"></script>
 </body>
 </html>
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #003366; /* Azul oscuro de fondo */
+    color: #f0f0f0; /* Texto claro */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.container {
+    background-color: #004080; /* Un azul un poco más claro para el contenedor principal */
+    padding: 30px;
+    border-radius: 12px; /* Bordes un poco más suaves */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3); /* Sombra más pronunciada */
+    width: 100%;
+    max-width: 650px; /* Un poco más ancho */
+    text-align: center;
+    border: 1px solid #0056b3; /* Borde sutil */
+}
+
+h1 {
+    color: #FFC107; /* Naranja/amarillo vibrante para títulos */
+    margin-bottom: 30px;
+    font-size: 2.2em;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+}
+
+h2 {
+    color: #ADD8E6; /* Azul claro para subtítulos */
+    margin-bottom: 20px;
+    font-size: 1.6em;
+}
+
+.input-section, .results-section, .explanation-section {
+    margin-bottom: 25px;
+    padding: 20px;
+    border: 1px solid #0056b3; /* Borde con azul más claro */
+    border-radius: 10px;
+    background-color: #004a99; /* Fondo de sección ligeramente diferente */
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.15); /* Sombra interna sutil */
+}
+
+.input-section label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: bold;
+    text-align: left;
+    color: #e0e0e0; /* Texto de etiqueta más claro */
+    font-size: 1.1em;
+}
+
+.input-section input[type="number"] {
+    width: calc(100% - 22px); /* Ajuste para padding */
+    padding: 12px;
+    margin-bottom: 18px;
+    border: 1px solid #0066cc; /* Borde del input */
+    border-radius: 6px;
+    font-size: 1.1em;
+    background-color: #0056b3; /* Fondo de input */
+    color: #ffffff; /* Color de texto del input */
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+}
+
+/* Placeholder color */
+.input-section input[type="number"]::placeholder {
+    color: #a0a0a0;
+}
+
+.input-section button {
+    background-color: #FFC107; /* Naranja/amarillo vibrante para el botón */
+    color: #003366; /* Texto oscuro para el botón */
+    padding: 14px 30px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.2em;
+    font-weight: bold;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.input-section button:hover {
+    background-color: #FFD700; /* Un poco más claro al pasar el ratón */
+    transform: translateY(-2px);
+}
+
+.results-section p {
+    font-size: 1.2em;
+    margin: 12px 0;
+    color: #ffffff; /* Blanco para resultados */
+}
+
+.results-section strong {
+    color: #ADD8E6; /* Azul claro para las etiquetas */
+}
+
+.results-section span {
+    font-weight: bold;
+    color: #FFD700; /* Naranja/amarillo para los valores de resultados */
+    font-size: 1.3em;
+}
+
+.explanation-section h2 {
+    color: #ADD8E6;
+    margin-bottom: 15px;
+}
+
+.explanation-section p, .explanation-section ul {
+    text-align: left;
+    margin-bottom: 10px;
+    line-height: 1.8;
+    color: #e0e0e0;
+}
+
+.explanation-section ul {
+    list-style-type: disc;
+    padding-left: 25px;
+}
+
+.explanation-section ul li {
+    margin-bottom: 8px;
+}
+document.addEventListener('DOMContentLoaded', () => {
+    const primerParcialInput = document.getElementById('primerParcial');
+    const segundoParcialInput = document.getElementById('segundoParcial');
+    const calcularBtn = document.getElementById('calcularBtn');
+    const notaPreviaResult = document.getElementById('notaPreviaResult');
+    const notaFinalNeededResult = document.getElementById('notaFinalNeededResult');
+
+    // Reconstrucción de la "TABLA DE NOTAS"
+    // Los índices del array se ajustan: Nota Previa 10 será index 0, Nota Examen Final 01 será index 0.
+    // E.g., table[notaExamenFinal-1][notaPrevia-10]
+    const gradeTable = [
+        // NOTA PREVIA: 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
+        /* EF 01 */ [10, 10, 10, 10, 10, 10, 10, 11, 11, 15, 16],
+        /* EF 02 */ [10, 10, 10, 10, 10, 10, 11, 11, 12, 15, 16],
+        /* EF 03 */ [10, 10, 10, 10, 10, 11, 11, 12, 12, 15, 16],
+        /* EF 04 */ [10, 10, 10, 10, 11, 11, 11, 12, 12, 15, 16],
+        /* EF 05 */ [10, 10, 10, 11, 11, 11, 12, 12, 13, 16, 16],
+        /* EF 06 */ [10, 10, 11, 11, 11, 12, 12, 13, 13, 16, 17],
+        /* EF 07 */ [10, 11, 11, 11, 12, 12, 13, 13, 14, 16, 17],
+        /* EF 08 */ [11, 11, 11, 12, 12, 13, 13, 14, 14, 16, 17],
+        /* EF 09 */ [11, 11, 12, 12, 13, 13, 14, 14, 15, 17, 17],
+        /* EF 10 */ [11, 12, 12, 13, 13, 14, 14, 15, 15, 17, 18],
+        /* EF 11 */ [11, 12, 12, 13, 13, 14, 14, 15, 15, 17, 18],
+        /* EF 12 */ [12, 12, 12, 13, 14, 14, 15, 15, 16, 17, 18],
+        /* EF 13 */ [12, 12, 13, 13, 14, 14, 15, 16, 16, 18, 19],
+        /* EF 14 */ [12, 13, 13, 14, 14, 15, 15, 16, 16, 18, 19],
+        /* EF 15 */ [13, 13, 13, 14, 15, 15, 16, 16, 17, 18, 19],
+        /* EF 16 */ [13, 13, 14, 14, 15, 16, 16, 17, 17, 19, 19],
+        /* EF 17 */ [14, 14, 14, 15, 15, 16, 16, 17, 17, 19, 20],
+        /* EF 18 */ [15, 15, 15, 16, 16, 16, 17, 17, 18, 19, 20],
+        /* EF 19 */ [15, 16, 16, 16, 17, 17, 17, 18, 18, 19, 20],
+        /* EF 20 */ [16, 16, 17, 17, 17, 18, 18, 18, 19, 20, 20]
+    ];
+
+    function calculateNotaPrevia(partial1, partial2) {
+        const average = (partial1 + partial2) / 2;
+        // Math.round en JavaScript redondea .5 hacia arriba al entero más cercano.
+        // Ej: 2.5 -> 3, 3.5 -> 4. Esto coincide con el comportamiento de redondeo de las imágenes.
+        return Math.round(average);
+    }
+
+    function getNotaDefinitiva(notaPrevia, notaExamenFinal) {
+        // Asegurarse de que las notas estén dentro de los rangos válidos de la tabla
+        if (notaPrevia < 10 || notaPrevia > 20 || notaExamenFinal < 1 || notaExamenFinal > 20) {
+            return null; // Fuera de los límites de la tabla
+        }
+
+        // Ajustar índices para la búsqueda en arrays (base 0)
+        const colIndex = notaPrevia - 10;      // Nota Previa 10 está en el índice 0
+        const rowIndex = notaExamenFinal - 1; // Nota Examen Final 1 está en el índice 0
+
+        if (gradeTable[rowIndex] && gradeTable[rowIndex][colIndex] !== undefined) {
+            return gradeTable[rowIndex][colIndex];
+        }
+        return null; // No encontrado en la tabla (debería ser raro si los rangos son correctos)
+    }
+
+    function calculateNotaFinalNeeded() {
+        const partial1 = parseFloat(primerParcialInput.value);
+        const partial2 = parseFloat(segundoParcialInput.value);
+
+        // Validación de entrada
+        if (isNaN(partial1) || isNaN(partial2) || partial1 < 0 || partial1 > 20 || partial2 < 0 || partial2 > 20) {
+            alert('¡Ups! Por favor, ingresa notas válidas entre 0 y 20 para ambos parciales.');
+            notaPreviaResult.textContent = '--';
+            notaFinalNeededResult.textContent = '--';
+            return;
+        }
+
+        const notaPrevia = calculateNotaPrevia(partial1, partial2);
+        notaPreviaResult.textContent = notaPrevia;
+
+        // Verificar aprobación automática
+        if (notaPrevia >= 16) {
+            notaFinalNeededResult.textContent = '¡Materia APROBADA! ¡Ya la pasaste! 🎉';
+            return;
+        }
+
+        // Buscar la nota mínima necesaria en el examen final
+        let minNotaFinal = -1;
+        for (let ef = 1; ef <= 20; ef++) {
+            const notaDefinitiva = getNotaDefinitiva(notaPrevia, ef);
+            if (notaDefinitiva !== null && notaDefinitiva >= 10) {
+                minNotaFinal = ef;
+                break; // Encontró la primera nota de examen final que permite aprobar
+            }
+        }
+
+        if (minNotaFinal !== -1) {
+            notaFinalNeededResult.textContent = `¡Necesitas un ${minNotaFinal} para aprobar!`;
+        } else {
+            // Si llega aquí y no encontró, significa que ni con 20 en el final se aprueba
+            const highestPossibleDefinitive = getNotaDefinitiva(notaPrevia, 20);
+            if (highestPossibleDefinitive !== null && highestPossibleDefinitive < 10) {
+                 notaFinalNeededResult.textContent = '¡Uhm, está difícil! Parece imposible aprobar con esta nota previa, aunque saques 20 en el final.';
+            } else {
+                // Mensaje genérico de error si algo inesperado sucede
+                notaFinalNeededResult.textContent = 'No se pudo determinar (verifica la tabla o los rangos de notas).';
+            }
+        }
+    }
+
+    calcularBtn.addEventListener('click', calculateNotaFinalNeeded);
+
+    // Permitir calcular con la tecla 'Enter' para una mejor experiencia de usuario
+    primerParcialInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            segundoParcialInput.focus();
+        }
+    });
+    segundoParcialInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            calcularBtn.click();
+        }
+    });
+});
